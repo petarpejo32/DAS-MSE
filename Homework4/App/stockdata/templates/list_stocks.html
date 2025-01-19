@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Stocks{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-4">Companies Stock List</h1>
+<div class="bg-white p-4 rounded-lg shadow-md">
+{#    <div class="mb-4">#}
+{#        <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-500" placeholder="Search for company..." />#}
+{#    </div>#}
+    <div class="space-y-4">
+        {% for company in stocks %}
+        <div class="bg-gray-200 p-4 rounded-lg flex justify-between items-center">
+            <h3 class="font-medium">{{ company.name }}({{ company.code }})</h3>
+            <a href="{% url 'detailed_stocks' company.id %}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">View Details</a>
+        </div>
+        {% endfor %}
+        {# Add more stock items here #}
+    </div>
+</div>
+{% endblock %}

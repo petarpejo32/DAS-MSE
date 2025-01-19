@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Macedonian Stock Exchange{% endblock %}
+
+{% block content %}
+<section class="bg-[#FDFAF5] py-16">
+    <div class="container mx-auto flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
+        <div class="text-center md:text-left">
+            <h1 class="text-5xl font-extrabold mb-4 text-gray-800 leading-tight">Track. Analyze. Grow.</h1>
+            <p class="text-lg text-gray-600 mb-6">The Stock Market at Your Fingertips!</p>
+            <a href="{% url 'stocks' %}"
+               class="bg-[#F4D4C5] hover:bg-[#EEC8B1] text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+               Explore Stocks Now
+            </a>
+        </div>
+        <img src="{% static 'charts.svg' %}" alt="Stock chart"
+             class="w-80 md:w-96 h-auto rounded-lg shadow-lg">
+    </div>
+</section>
+
+<section class="py-16 bg-gradient-to-r from-[#F4D4C5] via-[#F9E3D7] to-[#FDFAF5]">
+    <div class="container mx-auto flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
+        <img src="{% static 'forecast.svg' %}" alt="AI-powered predictions"
+             class="w-80 md:w-96 h-auto rounded-lg shadow-lg">
+        <div class="text-center md:text-left">
+            <h2 class="text-3xl font-extrabold mb-4 text-gray-800 leading-tight">Stay One Step Ahead with AI-Powered Stock Predictions!</h2>
+            <p class="text-lg text-gray-700 mb-6">Forecast and Prosper!</p>
+            <a href="{% url 'predict' %}"
+               class="bg-[#EEC8B1] hover:bg-[#D9B3A5] text-gray-800 font-bold py-3 px-8 rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition duration-300 ease-in-out">
+               Forecast and Prosper!
+            </a>
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock %}

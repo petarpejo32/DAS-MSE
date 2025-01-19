@@ -1,0 +1,665 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Predict Stock Data
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Stock Analysis & Predictions</h1>
+
+    <!-- Analysis Type Selection -->
+    <div class="mb-8 border-b border-gray-200">
+        <nav class="flex space-x-4" aria-label="Analysis Types">
+            <button class="analysis-tab px-6 py-3 border-b-2 font-medium text-lg border-blue-500 text-blue-600" data-tab="technical">
+                Technical Analysis
+            </button>
+            <button class="analysis-tab px-6 py-3 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700" data-tab="fundamental">
+                Fundamental Analysis
+            </button>
+            <button class="analysis-tab px-6 py-3 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700" data-tab="lstm">
+                LSTM Prediction
+            </button>
+        </nav>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <form id="analysisForm" method="post" class="bg-gray-100 p-6 rounded-lg shadow-sm">
+                {% csrf_token %}
+                <label for="company" class="block text-lg font-medium text-gray-700 mb-2">Select Company:</label>
+                <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    placeholder="Enter company code (e.g., ALK)"
+                    class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-300"
+                >
+
+                <!-- Technical Analysis Options -->
+                <div id="technical-options" class="analysis-content mt-4">
+                    <h3 class="text-lg font-medium text-gray-700 mb-4">Technical Indicators</h3>
+                    <p class="text-gray-600 mb-4">Select indicators from both categories for better analysis. Combining oscillators with moving averages often provides more reliable signals.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Oscillators -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-medium mb-4">Oscillators (Momentum Indicators)</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="rsi" name="indicators" value="rsi" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="rsi" class="font-medium">RSI</label>
+                                        <p class="text-sm text-gray-600">Measures momentum. Buy when < 30, Sell when > 70.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="macd" name="indicators" value="macd" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="macd" class="font-medium">MACD</label>
+                                        <p class="text-sm text-gray-600">Trend-following momentum indicator.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="stochastic" name="indicators" value="stochastic" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="stochastic" class="font-medium">Stochastic</label>
+                                        <p class="text-sm text-gray-600">Compare close to price range. Buy < 20, Sell > 80.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="williams" name="indicators" value="williams" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="williams" class="font-medium">Williams %R</label>
+                                        <p class="text-sm text-gray-600">Momentum indicator. Buy < -80, Sell > -20.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="cci" name="indicators" value="cci" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="cci" class="font-medium">CCI</label>
+                                        <p class="text-sm text-gray-600">Buy < -100, Sell > 100.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Moving Averages -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-medium mb-4">Moving Averages (Trend Indicators)</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="sma" name="indicators" value="sma" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="sma" class="font-medium">SMA</label>
+                                        <p class="text-sm text-gray-600">Simple Moving Average</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="ema" name="indicators" value="ema" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="ema" class="font-medium">EMA</label>
+                                        <p class="text-sm text-gray-600">Exponential Moving Average</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="wma" name="indicators" value="wma" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="wma" class="font-medium">WMA</label>
+                                        <p class="text-sm text-gray-600">Weighted Moving Average</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="hma" name="indicators" value="hma" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="hma" class="font-medium">HMA</label>
+                                        <p class="text-sm text-gray-600">Hull Moving Average</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start">
+                                    <input type="checkbox" id="dema" name="indicators" value="dema" class="mt-1 mr-2">
+                                    <div>
+                                        <label for="dema" class="font-medium">DEMA</label>
+                                        <p class="text-sm text-gray-600">Double Exponential Moving Average</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fundamental Analysis Options -->
+                <div id="fundamental-options" class="analysis-content mt-4 hidden">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Fundamental Analysis</h3>
+                    <p class="text-gray-600 mb-4">Analysis based on price changes and market sentiment.</p>
+                </div>
+
+                <!-- LSTM Options -->
+                <div id="lstm-options" class="analysis-content mt-4 hidden">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">LSTM Prediction</h3>
+                    <p class="text-gray-600 mb-4">Machine learning-based price predictions.</p>
+                </div>
+
+                <!-- Time Period Selection -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Analysis Period</h3>
+                    <div class="flex space-x-4">
+                        <button type="button" class="duration-btn w-full py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none" data-duration="1">1 Day</button>
+                        <button type="button" class="duration-btn w-full py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none" data-duration="7">1 Week</button>
+                        <button type="button" class="duration-btn w-full py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none" data-duration="30">1 Month</button>
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    class="mt-6 w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+                    id="analyzeButton"
+                >
+                    Analyze
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="bg-white p-6 rounded-lg shadow-md">
+            <div id="chart-container" class="mb-6 min-h-[400px]">
+                <!-- Chart will be inserted here -->
+            </div>
+            <div id="analysis-results" class="space-y-4">
+                <!-- Analysis results will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Handle tab switching
+    document.querySelectorAll('.analysis-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Update tab styles
+            document.querySelectorAll('.analysis-tab').forEach(t => {
+                t.classList.remove('border-blue-500', 'text-blue-600');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            this.classList.remove('border-transparent', 'text-gray-500');
+            this.classList.add('border-blue-500', 'text-blue-600');
+
+            // Show/hide corresponding options
+            const tabId = this.getAttribute('data-tab');
+            document.querySelectorAll('.analysis-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`${tabId}-options`).classList.remove('hidden');
+        });
+    });
+
+    // Handle duration button selection
+    let selectedDuration = null;
+    document.querySelectorAll('.duration-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.duration-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-black');
+            });
+            this.classList.remove('bg-gray-200', 'text-black');
+            this.classList.add('bg-blue-500', 'text-white');
+            selectedDuration = this.getAttribute('data-duration');
+        });
+    });
+
+    // Handle form submission
+    document.getElementById('analysisForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const company = document.getElementById('company').value;
+        if (!company || !selectedDuration) {
+            alert("Please enter a company code and select a duration.");
+            return;
+        }
+
+        // Get selected analysis type
+        const activeTab = document.querySelector('.analysis-tab.border-blue-500').getAttribute('data-tab');
+
+        // Show loading state
+        document.getElementById('analyzeButton').disabled = true;
+        document.getElementById('analyzeButton').textContent = 'Analyzing...';
+
+        try {
+            // Make API call based on analysis type
+            const formData = new FormData(this);
+            formData.append('analysis_type', activeTab);
+            formData.append('duration', selectedDuration);
+
+            const response = await fetch('/analyze/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await response.json();
+            
+            // Update results section based on response
+            updateResults(data);
+
+        } catch (error) {
+            alert('An error occurred during analysis');
+        } finally {
+            document.getElementById('analyzeButton').disabled = false;
+            document.getElementById('analyzeButton').textContent = 'Analyze';
+        }
+    });
+
+    function updateResults(data) {
+        const chartContainer = document.getElementById('chart-container');
+        const analysisResults = document.getElementById('analysis-results');
+        
+        // Clear previous results
+        chartContainer.innerHTML = '';
+        analysisResults.innerHTML = '';
+
+        if (data.error) {
+            analysisResults.innerHTML = `<div class="text-red-500">${data.error}</div>`;
+            return;
+        }
+        
+        // Create canvas for new chart
+        const canvas = document.createElement('canvas');
+        chartContainer.appendChild(canvas);
+        
+        // Create chart based on analysis type
+        const activeTab = document.querySelector('.analysis-tab.border-blue-500').getAttribute('data-tab');
+        
+        if (activeTab === 'technical') {
+            // Base datasets with price data
+            const datasets = [{
+                label: 'Price',
+                data: data.prices,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1,
+                yAxisID: 'y'
+            }];
+
+            // Add indicators to the datasets
+            if (data.indicators) {
+                // RSI
+                if (data.indicators.rsi) {
+                    datasets.push({
+                        label: 'RSI',
+                        data: data.indicators.rsi.values,
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1,
+                        yAxisID: 'rsi'
+                    });
+                }
+
+                // MACD
+                if (data.indicators.macd) {
+                    datasets.push({
+                        label: 'MACD Line',
+                        data: data.indicators.macd.macd_line,
+                        borderColor: 'rgb(54, 162, 235)',
+                        tension: 0.1,
+                        yAxisID: 'macd'
+                    }, {
+                        label: 'Signal Line',
+                        data: data.indicators.macd.signal_line,
+                        borderColor: 'borderColor: rgb(255, 159, 64)',
+                        tension: 0.1,
+                        yAxisID: 'macd'
+                    });
+                }
+
+                // Add Moving Averages
+                const maColors = {
+                    sma: 'rgb(153, 102, 255)',
+                    ema: 'rgb(255, 205, 86)',
+                    wma: 'rgb(201, 203, 207)',
+                    hma: 'rgb(100, 162, 235)',
+                    dema: 'rgb(255, 99, 71)'
+                };
+
+                ['sma', 'ema', 'wma', 'hma', 'dema'].forEach(ma => {
+                    if (data.indicators[ma]) {
+                        datasets.push({
+                            label: ma.toUpperCase(),
+                            data: data.indicators[ma].values,
+                            borderColor: maColors[ma],
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        });
+                    }
+                });
+            }
+
+            // Create the chart with all indicators
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Price & Moving Averages'
+                            }
+                        },
+                        rsi: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'RSI'
+                            },
+                            min: 0,
+                            max: 100,
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        macd: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'MACD'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(2);
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Display signals and analysis summary
+            const signalsDiv = document.createElement('div');
+            signalsDiv.className = 'mt-4 space-y-4';
+            
+            let signalHTML = `
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">Trading Signals:</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            `;
+            
+            Object.entries(data.indicators).forEach(([indicator, values]) => {
+                if (values.signals) {
+                    const lastSignal = values.signals[values.signals.length - 1];
+                    const signalColor = lastSignal === 'buy' ? 'text-green-600' : 
+                                      lastSignal === 'sell' ? 'text-red-600' : 'text-yellow-600';
+                    
+                    signalHTML += `
+                        <div class="border-b pb-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">${indicator.toUpperCase()}</span>
+                                <span class="${signalColor} font-bold uppercase">${lastSignal}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">
+                                ${getSignalDescription(indicator, lastSignal)}
+                            </p>
+                        </div>
+                    `;
+                }
+            });
+            
+            signalHTML += `
+                    </div>
+                </div>
+            `;
+            
+            signalsDiv.innerHTML = signalHTML;
+            analysisResults.appendChild(signalsDiv);
+            } else if (activeTab === 'lstm') {
+            // LSTM Prediction Chart
+            const historicalDataset = {
+                label: 'Historical Prices',
+                data: data.historical_prices,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            };
+
+            const predictionDataset = {
+                label: 'Predicted Prices',
+                data: Array(data.historical_prices.length - 1).fill(null).concat(
+                    [data.historical_prices[data.historical_prices.length - 1]],
+                    data.predicted_prices
+                ),
+                borderColor: 'rgb(255, 99, 132)',
+                borderDash: [5, 5],
+                tension: 0.1
+            };
+
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: [...data.historical_dates, ...data.prediction_dates],
+                    datasets: [historicalDataset, predictionDataset]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Price'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(2);
+                                    return label;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Add LSTM metrics to analysis results
+            analysisResults.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h3 class="font-medium text-lg mb-2">Model Performance</h3>
+                        <p>Training Loss: ${data.training_loss.toFixed(4)}</p>
+                        <p>Validation Loss: ${data.validation_loss.toFixed(4)}</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h3 class="font-medium text-lg mb-2">Prediction Details</h3>
+                        <p>Prediction Horizon: ${data.prediction_dates.length} days</p>
+                        <p>Last Known Price: ${data.historical_prices[data.historical_prices.length - 1].toFixed(2)} MKD</p>
+                        <p>Latest Predicted Price: ${data.predicted_prices[data.predicted_prices.length - 1].toFixed(2)} MKD</p>
+                        ${getPredictionRecommendation(data.historical_prices, data.predicted_prices)}
+                    </div>
+                </div>`;
+        } else if (activeTab === 'fundamental') {
+            // Fundamental Analysis Chart
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'Stock Price',
+                        data: data.prices,
+                        borderColor: 'rgb(75, 192, 192)',
+                        yAxisID: 'price'
+                    }, {
+                        label: 'Sentiment',
+                        data: data.sentiment_trend,
+                        borderColor: 'rgb(255, 99, 132)',
+                        yAxisID: 'sentiment'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        price: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Price'
+                            }
+                        },
+                        sentiment: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Sentiment'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Add analysis summary
+            const recommendationColor = data.recommendation === 'buy' ? 'text-green-600' : 
+                                     data.recommendation === 'sell' ? 'text-red-600' : 'text-yellow-600';
+            analysisResults.innerHTML = `
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-bold mb-2">Analysis Summary:</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-medium">Average Sentiment:</p>
+                            <p>${(data.average_sentiment * 100).toFixed(2)}%</p>
+                        </div>
+                        <div>
+                            <p class="font-medium">Recommendation:</p>
+                            <p class="${recommendationColor} font-bold uppercase">${data.recommendation}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Scroll to results
+        document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Helper function for signal descriptions
+    function getSignalDescription(indicator, signal) {
+        const descriptions = {
+            rsi: {
+                buy: 'Oversold condition (RSI < 30)',
+                sell: 'Overbought condition (RSI > 70)',
+                hold: 'Neutral momentum'
+            },
+            macd: {
+                buy: 'MACD crossed above signal line',
+                sell: 'MACD crossed below signal line',
+                hold: 'No significant crossover'
+            },
+            stochastic: {
+                buy: 'Oversold condition (< 20)',
+                sell: 'Overbought condition (> 80)',
+                hold: 'Neutral range'
+            },
+            williams: {
+                buy: 'Oversold condition (< -80)',
+                sell: 'Overbought condition (> -20)',
+                hold: 'Neutral range'
+            },
+            cci: {
+                buy: 'Oversold condition (< -100)',
+                sell: 'Overbought condition (> 100)',
+                hold: 'Neutral range'
+            }
+        };
+        return descriptions[indicator]?.[signal] || signal;
+    }
+
+    // Helper function for LSTM prediction recommendation
+    function getPredictionRecommendation(historical, predicted) {
+        const lastHistorical = historical[historical.length - 1];
+        const lastPredicted = predicted[predicted.length - 1];
+        const priceDiff = ((lastPredicted - lastHistorical) / lastHistorical) * 100;
+        
+        let recommendation, color;
+        if (priceDiff > 2) {
+            recommendation = 'BUY';
+            color = 'text-green-600';
+        } else if (priceDiff < -2) {
+            recommendation = 'SELL';
+            color = 'text-red-600';
+        } else {
+            recommendation = 'HOLD';
+            color = 'text-yellow-600';
+        }
+
+        return `
+            <div class="mt-4">
+                <h3 class="font-medium text-lg mb-2">Recommendation</h3>
+                <p class="${color} font-bold text-xl">${recommendation}</p>
+                <p class="text-sm text-gray-600">
+                    Predicted price change: ${priceDiff.toFixed(2)}%
+                </p>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

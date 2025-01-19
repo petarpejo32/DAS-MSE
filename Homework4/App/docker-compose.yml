@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SECRET_KEY=django-insecure-(sn1a2(g((=yi^ydiaosc%70ozub^%uv^d39m1q#xw91$8n8^+
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1
+      - DB_NAME=stock_market
+      - DB_USER=postgres
+      - DB_PASSWORD=admin
+      - DB_HOST=db
+      - DB_PORT=5555
+      - STATIC_URL=static/
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=stock_market
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - PGPORT=5555
+    ports:
+      - "5555:5555"
+
+volumes:
+  postgres_data:
+  static_volume:
